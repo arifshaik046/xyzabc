@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'confirm.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Confirmation</h2>
+        <form action="{% url 'submit' %}" method="POST">
+            {% csrf_token %}
+            <div class="input-group">
+                <label for="confirmation_code">Confirmation Code:</label>
+                <input type="text" id="confirmation_code" name="confirmation_code" required>
+            </div>
+            <button type="submit">Confirm</button>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </form>
+    </div>
+</body>
+</html>

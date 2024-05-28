@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            animation: fadeIn 1s ease-in-out;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            flex: 1;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input[type="text"], input[type="number"], input[list], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, input[list]:focus, select:focus {
+            border-color: #007bff;
+        }
+        .btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        #queryDataBtn {
+            background-color: #007bff;
+            color: #fff;
+        }
+        #queryDataBtn:hover {
+            background-color: #0056b3;
+        }
+        #resetBtn {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        #resetBtn:hover {
+            background-color: #a71d2a;
+        }
+        .horizontal-section {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .horizontal-section > div {
+            flex: 1 1 30%;
+            min-width: 220px;
+            margin: 10px;
+        }
+        .result-section {
+            margin-top: 20px;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .logout-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="logout-btn"  onclick="logoutUser()">Logout</button>
+        <h1>Query Data</h1>
+        <form id="queryForm">
+            <div class="horizontal-section">
+                <div class="form-group">
+                    <label for="country">Country:</label>
+                    <input list="countryList" id="country" name="country" onchange="populateStates()">
+                    <datalist id="countryList">
+                        <!-- Options will be populated by JavaScript -->
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label for="yearFounded">Year Founded:</label>
+                    <input list="yearList" id="yearFounded" name="yearFounded">
+                    <datalist id="yearList">
+                        <!-- Options will be populated by JavaScript -->
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label for="state">State:</label>
+                    <input list="stateList" id="state" name="state" onchange="populateCities()">
+                    <datalist id="stateList">
+                        <!-- Options will be populated by JavaScript -->
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label for="city">City:</label>
+                    <input list="cityList" id="city" name="city">
+                    <datalist id="cityList">
+                        <!-- Options will be populated by JavaScript -->
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label for="industry">Industry:</label>
+                    <input list="industryList" id="industry" name="industry">
+                    <datalist id="industryList">
+                        <!-- Options will be populated by JavaScript -->
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label for="employeeFrom">Employee (from):</label>
+                    <input type="number" id="employeeFrom" name="employeeFrom" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="employeeTo">Employee (to):</label>
+                    <input type="number" id="employeeTo" name="employeeTo" min="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <button type="button" id="queryDataBtn" class="btn" onclick="queryData()">Query Data</button>
+                <button type="button" id="resetBtn" class="btn" onclick="resetForm()">Reset</button>
+            </div>
+        </form>
+
+        <!-- Display section for query results -->
+        <div class="result-section" id="queryResults"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    populateCountries();
+    populateYears();
+    populateIndustries();
+});
+
+function queryData() {
+            console.log("Querying data...");
+            var formData = new FormData(document.getElementById("queryForm"));
+            var url = '/api/result?'; // Updated URL to match the backend endpoint
+            for (var pair of formData.entries()) {
+                url += encodeURIComponent(pair[0]) + '=' + encodeURIComponent(pair[1]) + '&';
+            }
+            url = url.replace(/&$/, '');
+
+            console.log("URL:", url);
+
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    console.log("Data:", data);
+                    document.getElementById('queryResults').innerHTML = `Number of matching records: ${data.count}`;
+                })
+                .catch(error => console.error('Error querying data:', error));
+        }
+function resetForm() {
+    document.getElementById("queryForm").reset();
+}
+
+function logoutUser() {
+            window.location.href = '/logout/';
+}
+
+function populateCountries() {
+    fetch('/api/country')
+        .then(response => response.json())
+        .then(data => {
+            const countryList = document.getElementById('countryList');
+            countryList.innerHTML = '';
+            data.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                countryList.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error fetching country data:', error));
+}
+
+function populateYears() {
+    const yearList = document.getElementById('yearList');
+    const currentYear = new Date().getFullYear();
+    for (let year = 1900; year <= currentYear; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        yearList.appendChild(option);
+    }
+}
+
+function populateStates() {
+    const country = document.getElementById('country').value;
+    if (!country) return;
+
+    fetch(`/api/states?country=${country}`)
+        .then(response => response.json())
+        .then(data => {
+            const stateList = document.getElementById('stateList');
+            stateList.innerHTML = '';
+            data.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state;
+                stateList.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error fetching state data:', error));
+}
+
+function populateCities() {
+    const state = document.getElementById('state').value;
+    if (!state) return;
+
+    fetch(`/api/cities?state=${state}`)
+        .then(response => response.json())
+        .then(data => {
+            const cityList = document.getElementById('cityList');
+            cityList.innerHTML = '';
+            data.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                cityList.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error fetching city data:', error));
+}
+
+function populateIndustries() {
+    fetch('/api/industries')
+        .then(response => response.json())
+        .then(data => {
+            const industryList = document.getElementById('industryList');
+            industryList.innerHTML = '';
+            data.forEach(industry => {
+                const option = document.createElement('option');
+                option.value = industry;
+                industryList.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error fetching industry data:', error));
+}
+
+    </script>
+</body>
